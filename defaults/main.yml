@@ -1,0 +1,4 @@
+---
+pulseaudio_avahi: no
+
+pulseaudio_firewall_zones: []

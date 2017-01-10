@@ -1,0 +1,6 @@
+---
+- hosts: all
+  roles:
+    - vagrant
+  vars:
+    pulseaudio_avahi: yes

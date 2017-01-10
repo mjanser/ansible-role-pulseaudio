@@ -1,0 +1,62 @@
+---
+- name: ensure packages are installed
+  package:
+    name: "{{ item }}"
+  with_items:
+    - pulseaudio
+    - pulseaudio-utils
+
+- name: ensure packages for avahi is installed
+  package:
+    name: "{{ item }}"
+  with_items:
+    - pulseaudio-module-zeroconf
+    - avahi
+  when: pulseaudio_avahi
+
+- name: ensure user is in group audio
+  user:
+    name: pulse
+    append: yes
+    groups: audio
+
+- name: ensure network module is loaded
+  lineinfile:
+    line: load-module module-native-protocol-tcp auth-anonymous=1
+    dest: /etc/pulse/system.pa
+
+- name: ensure zeroconf module is loaded
+  lineinfile:
+    line: load-module module-zeroconf-publish
+    dest: /etc/pulse/system.pa
+  when: pulseaudio_avahi
+
+- name: ensure service is installed
+  template:
+    src: pulseaudio.service.j2
+    dest: /etc/systemd/system/pulseaudio.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: ensure service is enabled
+  service:
+    name: pulseaudio
+    enabled: yes
+
+- name: ensure service is enabled
+  service:
+    name: avahi-daemon
+    enabled: yes
+  when: pulseaudio_avahi
+
+- name: ensure ports are open in firewall
+  firewalld:
+    service: "{{ item[0] }}"
+    zone: "{{ item[1] }}"
+    permanent: true
+    state: enabled
+  with_nested:
+    - [ "mdns", "pulseaudio" ]
+    - "{{ pulseaudio_firewall_zones }}"
+  when: pulseaudio_avahi
