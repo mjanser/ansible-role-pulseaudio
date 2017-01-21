@@ -13,22 +13,20 @@ For configuring the firewall the service `firewalld` has to run and the package 
 
 Available variables are listed below, along with default values:
 
-    kodi_type: service # service, desktop
-    kodi_user: kodi
-    kodi_user_create: yes
+    pulseaudio_network: no
+    pulseaudio_avahi: no
 
-    kodi_pvr_addons: []
+    pulseaudio_firewall_zones: []
 
-    kodi_database_password: secret
+### Network
 
-    kodi_watched_list_database: false
-    kodi_watched_list_database_backup: ~
-
-    kodi_firewall_zones: []
+Networking can be enabled with setting the variable `pulseaudio_network` to `true`.
+If you also want auto-discovery using avahi, set `pulseaudio_avahi` to `true`.
+Enabling avahi implicitly enables networking as well.
 
 ### Firewall
 
-The variable `kodi_firewall_zones` can be used to declare firewall zones in which kodi should be accessible.
+The variable `pulseaudio_firewall_zones` can be used to declare firewall zones in which pulseaudio should be accessible.
 This means the ports `8080/tcp` and `9777/udp` will be opened.
 
 Currently only `firewalld` is supported which is default on Fedora.

@@ -1,0 +1,4 @@
+- name: restart pulseaudio
+  service:
+    name: pulseaudio.service
+    state: restarted

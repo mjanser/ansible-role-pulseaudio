@@ -20,16 +20,45 @@
     append: yes
     groups: audio
 
+- name: ensure autospawn is disabled
+  lineinfile:
+    dest: /etc/pulse/client.conf
+    regexp: '^.*autospawn =.*'
+    line: autospawn = no
+
 - name: ensure network module is loaded
   lineinfile:
-    line: load-module module-native-protocol-tcp auth-anonymous=1
     dest: /etc/pulse/system.pa
+    line: load-module module-native-protocol-tcp auth-anonymous=1
+  when: pulseaudio_network or pulseaudio_avahi
+  notify:
+    - restart pulseaudio
+
+- name: ensure network module is not loaded
+  lineinfile:
+    dest: /etc/pulse/system.pa
+    state: absent
+    regexp: '^load-module module-native-protocol-tcp'
+  when: not pulseaudio_network and not pulseaudio_avahi
+  notify:
+    - restart pulseaudio
 
 - name: ensure zeroconf module is loaded
   lineinfile:
-    line: load-module module-zeroconf-publish
     dest: /etc/pulse/system.pa
+    line: load-module module-zeroconf-publish
   when: pulseaudio_avahi
+  notify:
+    - restart pulseaudio
+
+- name: ensure zeroconf module is not loaded
+  lineinfile:
+    dest: /etc/pulse/system.pa
+    state: absent
+    regexp: '^load-module module-zeroconf-publish'
+  when: not pulseaudio_avahi
+  notify:
+    - restart pulseaudio
 
 - name: ensure service is installed
   template:
@@ -43,20 +72,25 @@
   service:
     name: pulseaudio
     enabled: yes
+    state: started
 
-- name: ensure service is enabled
+- name: ensure avahi socket is enabled or disabled
   service:
-    name: avahi-daemon
-    enabled: yes
-  when: pulseaudio_avahi
+    name: avahi-daemon.socket
+    enabled: "{{ pulseaudio_avahi }}"
 
-- name: ensure ports are open in firewall
+- name: ensure pulseaudio port is open or closed in firewall
   firewalld:
-    service: "{{ item[0] }}"
-    zone: "{{ item[1] }}"
+    service: pulseaudio
+    zone: "{{ item }}"
     permanent: true
-    state: enabled
-  with_nested:
-    - [ "mdns", "pulseaudio" ]
-    - "{{ pulseaudio_firewall_zones }}"
-  when: pulseaudio_avahi
+    state: "{% if pulseaudio_network or pulseaudio_avahi %}enabled{% else %}disabled{% endif %}"
+  with_items: "{{ pulseaudio_firewall_zones }}"
+
+- name: ensure avahi port is open or closed in firewall
+  firewalld:
+    service: mdns
+    zone: "{{ item }}"
+    permanent: true
+    state: "{% if pulseaudio_avahi %}enabled{% else %}disabled{% endif %}"
+  with_items: "{{ pulseaudio_firewall_zones }}"
