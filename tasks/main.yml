@@ -74,10 +74,11 @@
     enabled: yes
     state: started
 
-- name: ensure avahi socket is enabled or disabled
+- name: ensure avahi socket is enabled
   service:
     name: avahi-daemon.socket
-    enabled: "{{ pulseaudio_avahi }}"
+    enabled: yes
+  when: pulseaudio_avahi
 
 - name: ensure pulseaudio port is open or closed in firewall
   firewalld:
