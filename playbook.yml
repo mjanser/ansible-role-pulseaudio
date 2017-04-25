@@ -4,3 +4,9 @@
     - vagrant
   vars:
     pulseaudio_avahi: yes
+    pulseaudio_card_profiles:
+      - card: 0
+        profile: output:analog-stereo
+    pulseaudio_sink_formats:
+      - sink: null
+        formats: "pcm; ac3-iec61937; dts-iec61937"

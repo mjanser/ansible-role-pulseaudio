@@ -1,0 +1,14 @@
+[Unit]
+Description=Perform PulseAudio configuration
+After=pulseaudio.service
+BindsTo=pulseaudio.service
+
+[Service]
+Type=oneshot
+User=pulse
+Group=pulse
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/pulseaudio-settings.sh
+
+[Install]
+WantedBy=multi-user.target

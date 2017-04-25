@@ -1,4 +1,7 @@
 ---
+pulseaudio_card_profiles: []
+pulseaudio_sink_formats: []
+
 pulseaudio_network: no
 pulseaudio_avahi: no
 

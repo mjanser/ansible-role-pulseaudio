@@ -6,7 +6,7 @@
     - pulseaudio
     - pulseaudio-utils
 
-- name: ensure packages for avahi is installed
+- name: ensure packages for avahi are installed
   package:
     name: "{{ item }}"
   with_items:
@@ -19,6 +19,31 @@
     name: pulse
     append: yes
     groups: audio
+
+- name: ensure default card profiles are configured
+  lineinfile:
+    dest: /etc/pulse/default.pa
+    regexp: '^set-card-profile {{ item.card }}'
+    line: "set-card-profile {{ item.card }} {{ item.profile }}"
+  with_items: "{{ pulseaudio_card_profiles }}"
+
+- name: ensure sink formats scripts is installed
+  template:
+    src: pulseaudio-settings.sh.j2
+    dest: /usr/local/bin/pulseaudio-settings.sh
+    owner: root
+    group: root
+    mode: 0755
+  when: pulseaudio_card_profiles|length > 0
+
+- name: ensure sink formats service is installed
+  copy:
+    src: pulseaudio-settings.service
+    dest: /etc/systemd/system/pulseaudio-settings.service
+    owner: root
+    group: root
+    mode: 0644
+  when: pulseaudio_card_profiles|length > 0
 
 - name: ensure autospawn is disabled
   lineinfile:
@@ -61,8 +86,8 @@
     - restart pulseaudio
 
 - name: ensure service is installed
-  template:
-    src: pulseaudio.service.j2
+  copy:
+    src: pulseaudio.service
     dest: /etc/systemd/system/pulseaudio.service
     owner: root
     group: root
@@ -73,6 +98,13 @@
     name: pulseaudio
     enabled: yes
     state: started
+
+- name: ensure sink formats service is enabled
+  service:
+    name: pulseaudio-settings
+    enabled: yes
+    state: started
+  when: pulseaudio_card_profiles|length > 0
 
 - name: ensure avahi socket is enabled
   service:

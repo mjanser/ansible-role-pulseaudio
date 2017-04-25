@@ -1,0 +1,8 @@
+#!/bin/bash
+
+sleep 3
+
+{% for item in pulseaudio_sink_formats %}
+SINK=$(pactl list sinks short | grep "{{ item.sink }}" | cut -f1)
+pactl set-sink-formats $SINK "{{ item.formats }}"
+{% endfor %}
